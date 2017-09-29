@@ -1,0 +1,5 @@
+2017-09-19 01:40:52 <sync> info : [config] nas:00-11-32-2A-52-E5, mid:90875, build new group, executor:90875
+2017-09-19 01:41:43 <sync> debug : [config] nas:00-11-32-2A-52-E5, mid:90875, sync config not change
+2017-09-19 02:03:21 <sync> debug : [config] nas:00-11-32-6F-28-C9, mid:9999998, sync config not change
+2017-09-19 02:03:22 <sync> error : get song detail failed: songid(web_lx_158567) was not exist
+2017-09-19 02:55:03 <sync> debug : [config] nas:00-11-32-2A-52-E5, mid:90875, sync config not change

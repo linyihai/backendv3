@@ -1,0 +1,17 @@
+2017-09-11 10:12:01 <sync> info : [config] nas:A1, mid:5, minik left
+2017-09-11 10:12:01 <sync> info : [config] nas:A2, mid:5, build new group, executor:5
+2017-09-11 12:09:19 <sync> info : [config] nas:1750NDN125100, mid:9999998, build new group, executor:9999998
+2017-09-11 12:09:34 <sync> debug : [config] nas:1750NDN125100, mid:9999998, sync config not change
+2017-09-11 12:09:52 <sync> debug : [config] nas:1750NDN125100, mid:9999998, sync config not change
+2017-09-11 12:16:45 <sync> debug : [config] nas:1750NDN125100, mid:9999998, sync config not change
+2017-09-11 12:21:01 <sync> debug : [config] nas:1750NDN125100, mid:9999998, sync config not change
+2017-09-11 12:23:14 <sync> debug : [config] nas:1750NDN125100, mid:9999998, sync config not change
+2017-09-11 12:24:40 <sync> debug : [config] nas:1750NDN125100, mid:9999998, sync config not change
+2017-09-11 12:26:09 <sync> debug : [config] nas:1750NDN125100, mid:9999998, sync config not change
+2017-09-11 12:31:50 <sync> debug : [config] nas:1750NDN125100, mid:9999998, sync config not change
+2017-09-11 12:35:43 <sync> debug : [config] nas:1750NDN125100, mid:9999998, sync config not change
+2017-09-11 12:36:20 <sync> debug : [config] nas:1750NDN125100, mid:9999998, sync config not change
+2017-09-11 12:38:27 <sync> debug : [config] nas:1750NDN125100, mid:9999998, sync config not change
+2017-09-11 12:39:54 <sync> debug : [config] nas:1750NDN125100, mid:9999998, sync config not change
+2017-09-11 12:46:28 <sync> debug : [config] nas:1750NDN125100, mid:9999998, sync config not change
+2017-09-11 12:48:55 <sync> debug : [config] nas:1750NDN125100, mid:9999998, sync config not change
