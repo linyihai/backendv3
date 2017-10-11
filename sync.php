@@ -8,36 +8,43 @@ $DB = new DB($dbHost,$dbUser,$dbPass,$dbData,$dbConn);
 $DB->query("set names utf8");
 unset($dbHost,$dbUser,$dbPass,$dbData,$dbConn);
 if ($cmd == "sync_songlist_getsonglist") {
-    $mid        = $_GET['mid'];
-    $nasid      = $_GET['nasid'];
+    foreach ($_REQUEST as $key => $value){
+        diagnose_logger("debug", "key[$key], value[$value]\n");
+    }
+    $mid        = $_REQUEST['mid'];
+    $nasid      = $_REQUEST['nasid'];
     if (!$mid or !$nasid or $mid < 0) {
-        $res = array("errcode"=>-1, "errmsg"=>"srv: mid or nasid invalid", "songlist"=>array());
+        $res = array("errcode"=>-1, "errmsg"=>"srv: mid[$mid] or nasid[$nasid] invalid", "songlist"=>array());
         echo json_encode($res);
         return;
     }
     $json_str   = file_get_contents("php://input"); //接收POST数据
     sync_logger("debug", "recv current songlist:$json_str\n");
     $js         = json_decode($json_str);
-    $src_songlist   = $js->songlist;
+    if (isset($js["songlist"])){
+        $src_songlist = json_encode($js["songlist"]);
+    }else{
+        $src_songlist = $json_str;
+    }
     $sql            = "select mid, nasid from t_runtime_songlist_sync where mid=$mid";
     $recordset      = $DB->query($sql);
-    
+
     //更新同步关系 和当前客户端的歌单列表
     $sql = "select nasid, executor, dst_songlist from t_runtime_songlist_sync where nasid='$nasid' and mid=$mid";
     $recordset = $DB->query($sql);
     $row       = $DB->fetchArray($recordset);
-    if ($row) {  //机器没有更换nas盘   
+    if ($row) {  //机器没有更换nas盘
             $dst_songlist = $row['dst_songlist'];
             $executor     = $row['executor'];
             $sql = "update t_runtime_songlist_sync set src_songlist='$src_songlist' where mid=$mid and nasid = '$nasid'";
-            $DB->query($sql);
+            $query = $DB->query($sql);
             sync_logger("debug", "[config] nas:$nasid, mid:$mid, sync config not change\n");
      }
      else {    //老机器更换了nas盘（使用新的nas盘或 加入到其他nas盘中） || 新机器加入（加入到老的nas盘组或者使用新的nas盘）
             $sql = "select nasid, executor from t_runtime_songlist_sync where mid = $mid";
             $recordset  = $DB->query($sql);
             $row        = $DB->fetchArray($recordset);
-            if ($row) { 
+            if ($row) {
                 //同步关系已经再存在，清空同步关系
                 $old_nasid  = $row['nasid'];
                 $executor   = $row['executor'];
@@ -67,20 +74,20 @@ if ($cmd == "sync_songlist_getsonglist") {
             //清除了原来的同步关系后，作为一个新的机器添加到同步系统中，有可能加入已经存在的nas组，或者启用新的nas组
             $sql        = "select nasid, executor, dst_songlist from t_runtime_songlist_sync where nasid = '$nasid'";
             $recordset  = $DB->query($sql);
-            $row        = $DB->fetchArray($recordset);    
+            $row        = $DB->fetchArray($recordset);
             if ($row) { //加入到已经存在的nas组中
                 $executor       = $row['executor'];
                 $dst_songlist   = $row['dst_songlist'];
                 if ($dst_songlist)
-                    $sql = "insert into t_runtime_songlist_sync(mid, nasid, executor, src_songlist, dst_songlist) values($mid, '$nasid', '$executor', '$src_songlist', '$dst_songlist')";  
+                    $sql = "insert into t_runtime_songlist_sync(mid, nasid, executor, src_songlist, dst_songlist) values($mid, '$nasid', '$executor', '$src_songlist', '$dst_songlist')";
                 else
-                    $sql = "insert into t_runtime_songlist_sync(mid, nasid, executor, src_songlist, dst_songlist) values($mid, '$nasid', '$executor', '$src_songlist', NULL)";  
+                    $sql = "insert into t_runtime_songlist_sync(mid, nasid, executor, src_songlist, dst_songlist) values($mid, '$nasid', '$executor', '$src_songlist', NULL)";
                 $DB->query($sql);
                 sync_logger("info", "[config] nas:$nasid, mid:$mid, minik json in, executor:$executor\n");
             }
             else {     //所使用的nas没有存在同步关系，需要对该nas进行计算，从而确定该设备的nas版本
                 $executor = $mid;
-                $sql = "insert into t_runtime_songlist_sync(mid, nasid, executor, src_songlist, dst_songlist) values($mid, '$nasid', '$executor', '$src_songlist', NULL)";  
+                $sql = "insert into t_runtime_songlist_sync(mid, nasid, executor, src_songlist, dst_songlist) values($mid, '$nasid', '$executor', '$src_songlist', NULL)";
                 $DB->query($sql);
                 sync_logger("info", "[config] nas:$nasid, mid:$mid, build new group, executor:$mid\n");
             }
@@ -89,11 +96,11 @@ if ($cmd == "sync_songlist_getsonglist") {
     $sql = "select nasid, executor, dst_songlist from t_runtime_songlist_sync where nasid='$nasid' and mid=$mid";
     $recordset = $DB->query($sql);
     $row       = $DB->fetchArray($recordset);
-    if ($row) {  
+    if ($row) {
         $executor       = $row['executor'];
         $dst_songlist   = $row['dst_songlist'];
         if ($executor == $mid) {
-            if (!$dst_songlist || strlen($dst_songlist) == 0) 
+            if (!$dst_songlist || strlen($dst_songlist) == 0)
                 $res = array("errcode"=>0, "errmsg"=>"the server still resolving songlist, please wait", "songlist"=>array());
             else {
                 $res = array("errcode"=>0,"errmsg"=>"srv: last songlist", "songlist"=>json_decode($dst_songlist));
@@ -102,13 +109,13 @@ if ($cmd == "sync_songlist_getsonglist") {
         }
         else {
             $res = array("errcode"=>0, "errmsg"=>"srv: neighbor($executor) was downloading", "songlist"=>array());
-            echo json_encode($res);       
+            echo json_encode($res);
         }
     }
     else {
         $res = array("errcode"=>-1, "errmsg"=>"srv: build the sync config failed, maybe db error", "songlist"=>array());
         echo json_encode($res);
-    }  
+    }
 }
 elseif ($cmd == "sync_songlist_getsonglist_detail") {
     $songlistid = $_GET['songlistid'];
@@ -141,7 +148,7 @@ elseif ($cmd == "sync_songlist_getsonglist_detail") {
                 $e          = explode(".", $pic_url);
                 $t          = $e[count($e) - 1];
                 $pic_dst    = "\$minik_resourcepath\\Ver_$songlistid\\video\\$id.$t";
-                $pic_txt    = "1|video\\$id.$t|0"; 
+                $pic_txt    = "1|video\\$id.$t|0";
                 $item       = array("songid"=>$id, "src_url"=>$src_url, "src_md5"=>$src_md5, "src_dst"=>$src_dst, "src_txt"=>$src_txt,  "cover_url"=>$pic_url, "cover_md5"=>$pic_md5, "cover_dst"=>$pic_dst, "cover_txt"=>$pic_txt);
                 array_push($songdetail, $item);
             }
@@ -163,7 +170,7 @@ elseif ($cmd == "sync_songlist_getsonglist_detail") {
                 $dst      = "\$minik_resourcepath\Ver_$songlistid\\singer\\$singerid.jpg";
                 $txt      = "2|singer\\$singerid.jpg|0";
                 $item     = array("singerid"=>$singerid, "src"=>$src, "md5"=>$md5, "dst"=>$dst, "txt"=>$txt);
-                array_push($singerdetail, $item);          
+                array_push($singerdetail, $item);
             }
         }
         $swsong_url = $row['swsong_url'];
@@ -177,7 +184,7 @@ elseif ($cmd == "sync_songlist_getsonglist_detail") {
         $swsong_v2_dst = "\$minik_resourcepath\\Ver_$songlistid\\profile\\swsong.db";
         $swsong_v2_txt = "3|profile\\swsong.db|0";
         $version_v2    = 2;
-        
+
         $swsong = array();
         $item1 = array("url"=>$swsong_url, "md5"=>$swsong_md5, "dst"=>$swsong_dst, "txt"=>$swsong_txt, "ver"=>$version);
         $item2 = array("url"=>$swsong_v2_url, "md5"=>$swsong_v2_md5, "dst"=>$swsong_v2_dst, "txt"=>$swsong_v2_txt, "ver"=>$version_v2);
@@ -211,7 +218,7 @@ elseif ($cmd == "sync_backlist_getbacklist") {
         $item = array("id"=>$id, 'utime'=>$utime);
         array_push($song, $item);
     }
-    
+
     $sql = "select type, id, unix_timestamp(utime) as utime from t_data_backlist where type = 2"; //singer
     $recordset  = $DB->query($sql);
     $singer     = array();

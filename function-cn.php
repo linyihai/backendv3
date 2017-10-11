@@ -18,4 +18,17 @@ function sync_logger($level, $message)
     $msg     = $now . " <sync> " . $level . " : " . $message;
     error_log($msg, 3, $f);
 }
+
+
+function diagnose_logger($level, $message)
+{
+    $tody = date("Ymd");
+    global  $logfile;
+    $f   = "$logfile/diagnose$tody.log";
+    $now     = date("Y-m-d H:i:s");
+    $msg     = $now . " <diagnose> " . $level . " : " . $message;
+    error_log($msg, 3, $f);
+}
 ?>
+
+

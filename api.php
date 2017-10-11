@@ -811,8 +811,9 @@ elseif ($cmd == "data_song_query") {
     $songid         = $_GET['songid'];
     $excep          = $_GET['excep'];
 
+
     $pagesize       = 10;    
-    $sql = "select songid, name, src_url, cover_url, language, videotype, pubtime, singer1, singertype, ishd, album, copyright, tag_QENRE, tag_FEELING, tag_MELODY, intro from t_data_song where 1";    
+    $sql = "select songid, name, src_url, cover_url, language, videotype, videoquality, pubtime, singer1, singertype, ishd, album, copyright, tag_QENRE, tag_FEELING, tag_MELODY, intro, lyricist, composer, pinyin_first, pinyin, singtype, orig_tone_quality, vocal_accomp_version, vocal_accomp_tone_quality, orig_channel, vocal_accomp_channel, subtitle_type, duration from t_data_song where 1";    
     $sql_total = "select count(*) as total from t_data_song where 1";
     
     if ($songid) {
@@ -879,11 +880,24 @@ elseif ($cmd == "data_song_query") {
         $singer     = $row['singer1'];
         $singertype = $row['singertype'];
         $videotype  = $row['videotype'];
+        $videoquality = $row['videoquality'];
         $pubtime    = $row['pubtime'];
         $album      = $row['album'];
         $cover_path = $row['cover_url'];
         $src_path   = $row['src_url'];
-        $intro      = $row['intro'];        
+        $intro      = $row['intro'];
+        $lyricist   = $row['lyricist'];
+        $composer   = $row['composer'];
+        $pinyin_first   = $row['pinyin_first'];
+        $pinyin         = $row['pinyin'];
+        $singtype   = $row['singtype'];
+        $orig_tone_quality         = $row['orig_tone_quality'];
+        $vocal_accomp_version      = $row['vocal_accomp_version'];
+        $vocal_accomp_tone_quality = $row['vocal_accomp_tone_quality'];
+        $orig_channel              = $row['orig_channel'];
+        $vocal_accomp_channel      = $row['vocal_accomp_channel'];
+        $subtitle_type             = $row['subtitle_type'];
+        $duration                  = $row['duration'];      
 
         $tag_MELODY = $row['tag_MELODY'];
         $tag_FEELING= $row['tag_FEELING'];
@@ -895,7 +909,7 @@ elseif ($cmd == "data_song_query") {
         $tag_QENRE_L32   = $tag_QENRE & 0x00000000FFFFFFFF;
         $tag_QENRE_H32   = ($tag_QENRE &  0XFFFFFFFF00000000) >> 32;
 
-        $item = array("songid"=>$songid, "name"=>$name, "language"=>$language, "copyright"=>$corp, "singer"=>$singer, "singertype"=>$singertype, "videotype"=>$videotype, "hd"=>$ishd, "pubtime"=>$pubtime, "album"=>$albumname, "tag_QENRE_L32"=>$tag_QENRE_L32, "tag_QENRE_H32"=>$tag_QENRE_H32, "tag_MELODY_L32"=>$tag_MELODY_L32, "tag_MELODY_H32"=>$tag_MELODY_H32, "tag_FEELING_H32"=>$tag_FEELING_H32, "tag_FEELING_L32"=>$tag_FEELING_L32, "cover_path"=>$cover_path, "src_path"=>$src_path, "intro"=>$intro);
+        $item = array("songid"=>$songid, "name"=>$name, "language"=>$language, "copyright"=>$corp, "singer"=>$singer, "singertype"=>$singertype, "videotype"=>$videotype, "videoquality"=>$videoquality, "hd"=>$ishd, "pubtime"=>$pubtime, "album"=>$album, "tag_QENRE_L32"=>$tag_QENRE_L32, "tag_QENRE_H32"=>$tag_QENRE_H32, "tag_MELODY_L32"=>$tag_MELODY_L32, "tag_MELODY_H32"=>$tag_MELODY_H32, "tag_FEELING_H32"=>$tag_FEELING_H32, "tag_FEELING_L32"=>$tag_FEELING_L32, "cover_path"=>$cover_path, "src_path"=>$src_path, "intro"=>$intro, "lyricist"=>$lyricist, "composer"=>$composer, "pinyin_first"=>$pinyin_first,"pinyin"=>$pinyin, "singtype"=>$singtype, "orig_tone_quality"=>$orig_tone_quality, "vocal_accomp_version"=>$vocal_accomp_version, "vocal_accomp_tone_quality"=>$vocal_accomp_tone_quality, "orig_channel"=>$orig_channel, "vocal_accomp_channel"=>$vocal_accomp_channel, "subtitle_type"=>$subtitle_type, "duration"=>$duration);
         array_push($songlist, $item);
     }
     $recordset = $DB->query($sql_total);
@@ -910,10 +924,6 @@ elseif ($cmd == "data_singer_query") {
     $sex        = $_GET['sex'];
     $singerid   = $_GET['singerid'];
     $search_text= $_GET['search_text'];
-    if ($search_text && is_numeric($search_text))
-        $singerid = $search_text;
-    if ($search_text && (!is_numeric($search_text)))
-        $name = $search_text;
         
     $pagesize = 10;
     if (!$page)
@@ -924,7 +934,15 @@ elseif ($cmd == "data_singer_query") {
     if ($sex)
         $condition = $condition . " and sex like '%$sex%'";
     if ($singerid)
-        $condition = $condition . " and singerid=$singerid";
+        $condition = $condition . " and singerid in ($singerid)";
+    if ($search_text) {
+        $arr = explode(",", $search_text);
+        if (is_numeric($arr[0])){
+            $condition = $condition  . " and singerid in ($search_text)";
+        }
+        else 
+            $condition = $condition . " and name like '%$search_text%'";
+    }
 
     $sql        = "select * from t_data_singer $condition limit " . ($page - 1) * $pagesize . "," . $pagesize;
     $sql_total  = "select count(*) as total from t_data_singer $condition";
